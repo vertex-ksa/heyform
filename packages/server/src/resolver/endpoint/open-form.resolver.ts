@@ -7,6 +7,7 @@ import { timestamp } from '@heyform-inc/utils'
 import { Args, Query, Resolver } from '@nestjs/graphql'
 import { FormAnalyticService, FormService } from '@service'
 import { aesEncryptObject, assertFormIsAcceptingSubmissions } from '@utils'
+import { approvalEvidenceHash, publishedFormSnapshot } from '../../utils/approval'
 
 @Resolver()
 @UseGuards(EndpointAnonymousIdGuard)
@@ -33,7 +34,11 @@ export class OpenFormResolver {
     }
 
     assertFormIsAcceptingSubmissions(form.settings, timestamp())
+    const schemaHash = approvalEvidenceHash(publishedFormSnapshot(form))
     if (input.version !== undefined && input.version !== form.version) {
+      throw new BadRequestException('The form changed. Reload the form before submitting.')
+    }
+    if (input.schemaHash !== undefined && input.schemaHash !== schemaHash) {
       throw new BadRequestException('The form changed. Reload the form before submitting.')
     }
 
@@ -44,6 +49,8 @@ export class OpenFormResolver {
       {
         formId: form.id,
         formVersion: form.version,
+        formSchemaHash: schemaHash,
+        displayedSchemaBound: input.schemaHash === schemaHash && input.version === form.version,
         timestamp: timestamp()
       },
       FORM_ENCRYPTION_KEY

@@ -30,6 +30,12 @@ export class OpenFormInput {
   @IsInt()
   @Min(0)
   version?: number
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @Length(64, 64)
+  schemaHash?: string
 }
 
 @InputType()

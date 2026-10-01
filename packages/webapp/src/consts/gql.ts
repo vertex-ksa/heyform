@@ -1389,6 +1389,8 @@ export const PUBLIC_FORM_GQL = gql`
   query publicForm($input: FormDetailInput!) {
     publicForm(input: $input) {
       id
+      version
+      schemaHash
       teamId
       memberId
       name

@@ -25,13 +25,14 @@ const COMPLETE_SUBMISSION_GQL = `mutation completeSubmission($input: CompleteSub
 }`
 
 export class EndpointService {
-  static async openForm(formId: string, version?: number): Promise<string> {
+  static async openForm(formId: string, version?: number, schemaHash?: string): Promise<string> {
     const result = await axios({
       query: OPEN_FORM_GQL,
       variables: {
         input: {
           formId,
-          version
+          version,
+          schemaHash
         }
       }
     })

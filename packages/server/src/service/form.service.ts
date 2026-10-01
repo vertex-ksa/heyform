@@ -12,6 +12,7 @@ import { helper, pickObject, timestamp } from '@heyform-inc/utils'
 import { FormModel } from '@model'
 import { literalSearchRegex, mapToObject, normalizeTranslationLanguages } from '@utils'
 import { getUpdateQuery } from '@utils'
+import { approvalEvidenceHash, publishedFormSnapshot } from '../utils/approval'
 
 interface UpdateFiledOptions {
   formId: string
@@ -368,11 +369,14 @@ export class FormService {
       'name',
       'interactiveMode',
       'kind',
+      'version',
       'hiddenFields',
       'logics',
       'variables',
       'themeSettings'
     ])
+
+    masked.schemaHash = approvalEvidenceHash(publishedFormSnapshot(form))
 
     //!!! Do not disclose form password to the front end
     masked.settings = pickObject(form.settings, [

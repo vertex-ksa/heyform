@@ -3,6 +3,7 @@ import * as assert from 'assert'
 
 import { PaymentIntentWebhookController } from '../src/controller/payment-intent-webhook.controller'
 import { CompleteSubmissionResolver } from '../src/resolver/endpoint/complete-submission.resolver'
+import { approvalEvidenceHash, publishedFormSnapshot } from '../src/utils/approval'
 
 async function testPaymentUsesPublishedFormConfiguration() {
   let storedSubmission: Record<string, any> | undefined
@@ -50,7 +51,7 @@ async function testPaymentUsesPublishedFormConfiguration() {
     }
   }
   const endpointService = {
-    decryptToken: () => ({ formId: 'form_1', formVersion: 7, timestamp: now }),
+    decryptToken: () => ({ formId: 'form_1', formVersion: 7, formSchemaHash: approvalEvidenceHash(publishedFormSnapshot(form)), displayedSchemaBound: true, timestamp: now }),
     assertOpenToken: () => now,
     verifySpam: async () => false
   }

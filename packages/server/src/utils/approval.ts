@@ -44,6 +44,12 @@ export function approvalEvidenceHash(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(typedValue(value)), 'utf8').digest('hex')
 }
 
+export function publishedFormSnapshot(form: any) {
+  const values = typeof form.toObject === 'function' ? form.toObject({ flattenMaps: true }) : form
+  return { fields: values.fields, hiddenFields: values.hiddenFields, logics: values.logics,
+    variables: values.variables, translations: values.translations }
+}
+
 export function createSubmissionApproval(input: {
   tenantId: string; formId: string; submissionId: string; submissionRevision: number;
   formVersion: number; snapshot: unknown; requesterId: string; reviewers: string[]; commandId: string; commandRevision: number

@@ -24,7 +24,7 @@ import { GOOGLE_RECAPTCHA_KEY } from '@/consts/env'
 import { PasswordCheck } from './PasswordCheck'
 
 interface RendererProps {
-  form: FormModel & { version?: number }
+  form: FormModel & { version?: number; schemaHash?: string }
   query: Record<string, Any>
   locale: string
   contactId?: string
@@ -34,6 +34,7 @@ let captchaRef: Any = null
 
 export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) => {
   const openTokenRef = useRef<string>('')
+  const openTaskRef = useRef<Promise<void> | null>(null)
   const passwordTokenRef = useRef<string>('')
   const [isPasswordChecked, setIsPasswordChecked] = useState(false)
 
@@ -123,9 +124,13 @@ export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) 
     }
   }
 
-  async function openForm() {
-    sendMessageToParent('FORM_OPENED')
-    openTokenRef.current = await EndpointService.openForm(form.id, form.version)
+  function openForm(): Promise<void> {
+    if (!openTaskRef.current) {
+      openTaskRef.current = EndpointService.openForm(form.id, form.version, form.schemaHash)
+        .then(token => { openTokenRef.current = token; sendMessageToParent('FORM_OPENED') })
+        .catch(error => { openTaskRef.current = null; throw error })
+    }
+    return openTaskRef.current
   }
 
   function handlePasswordFinish(passwordToken: string) {
@@ -135,6 +140,8 @@ export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) 
 
   async function handleSubmit(values: Any, partialSubmission?: boolean, stripe?: Any) {
     try {
+      // Confirm the displayed schema before uploads or payment preparation.
+      await openForm()
       let token: Record<string, Any> = {}
 
       if (form.settings?.captchaKind === CaptchaKindEnum.GOOGLE_RECAPTCHA) {
@@ -206,7 +213,7 @@ export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) 
     sendMessageToParent('FORM_LOADED')
 
     if (!form.suspended && form.settings?.active) {
-      openForm()
+      void openForm().catch(() => undefined)
       initCaptcha().catch(console.error)
     }
   }, [])
