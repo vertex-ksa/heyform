@@ -1,12 +1,12 @@
 import { IconEye, IconEyeClosed } from '@tabler/icons-react'
 import {
-  ChangeEvent,
   CompositionEvent,
   FC,
   InputHTMLAttributes,
   KeyboardEvent,
   ReactNode,
   Ref,
+  SyntheticEvent,
   TextareaHTMLAttributes,
   useCallback,
   useEffect,
@@ -98,7 +98,7 @@ const InputComponent: FC<InputProps> = ({
   const [value, setValue] = useState<Any>(rawValue as Any)
   const [length, setLength] = useState(String(rawValue).length)
 
-  function handleChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleChange(event: SyntheticEvent<HTMLInputElement>) {
     let newValue = getValue(event)
 
     if (isCountingEnabled) {
@@ -121,15 +121,15 @@ const InputComponent: FC<InputProps> = ({
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (!lock.current && event.key === 'Enter') {
-      onEnter?.(getValue(event as Any))
+      onEnter?.(getValue(event))
     }
   }
 
-  function getValue(event: ChangeEvent<HTMLInputElement>) {
-    let newValue: any = event.target.value
+  function getValue(event: SyntheticEvent<HTMLInputElement>) {
+    let newValue: any = event.currentTarget.value
 
-    if (type === 'file' && helper.isValid(event.target.files)) {
-      newValue = event.target.files![0]
+    if (type === 'file' && helper.isValid(event.currentTarget.files)) {
+      newValue = event.currentTarget.files![0]
     }
 
     /**
@@ -161,7 +161,7 @@ const InputComponent: FC<InputProps> = ({
 
   function handleCompositionEnd(event: CompositionEvent<HTMLInputElement>) {
     lock.current = false
-    onChange?.(getValue(event as Any))
+    onChange?.(getValue(event))
   }
 
   function handleMouseUp() {
@@ -370,7 +370,7 @@ const TextArea: FC<TextAreaProps> = ({
   const [value, setValue] = useState<Any>(normalizedRawValue as Any)
   const [length, setLength] = useState(String(normalizedRawValue).length)
 
-  function handleChange(event: ChangeEvent<HTMLTextAreaElement>) {
+  function handleChange(event: SyntheticEvent<HTMLTextAreaElement>) {
     let newValue = getValue(event)
 
     if (isCountingEnabled) {
@@ -393,12 +393,12 @@ const TextArea: FC<TextAreaProps> = ({
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (!lock.current && event.key === 'Enter') {
-      onEnter?.(getValue(event as Any))
+      onEnter?.(getValue(event))
     }
   }
 
-  function getValue(event: ChangeEvent<HTMLTextAreaElement>) {
-    return event.target.value
+  function getValue(event: SyntheticEvent<HTMLTextAreaElement>) {
+    return event.currentTarget.value
   }
 
   function handleCompositionStart() {
@@ -407,7 +407,7 @@ const TextArea: FC<TextAreaProps> = ({
 
   function handleCompositionEnd(event: CompositionEvent<HTMLTextAreaElement>) {
     lock.current = false
-    onChange?.(getValue(event as Any))
+    onChange?.(getValue(event))
   }
 
   function handleMouseUp() {

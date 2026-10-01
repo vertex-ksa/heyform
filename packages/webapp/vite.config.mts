@@ -1,8 +1,8 @@
 import react from '@vitejs/plugin-react-swc'
 import { resolve } from 'path'
 import { ConfigEnv, loadEnv } from 'vite'
-import svgr from 'vite-plugin-svgr'
 import { analyzer } from 'vite-bundle-analyzer'
+import svgr from 'vite-plugin-svgr'
 
 export default ({ mode }: ConfigEnv) => {
   const env = loadEnv(mode, process.cwd())
@@ -22,6 +22,9 @@ export default ({ mode }: ConfigEnv) => {
       }
     },
     resolve: {
+      // Source-linked renderer and webapp share one translation instance even
+      // when pnpm separates optional TypeScript peer snapshots.
+      dedupe: ['i18next', 'react-i18next'],
       alias: [
         {
           find: /^@heyform-inc\/form-renderer\/style\.css$/,
@@ -91,9 +94,9 @@ export default ({ mode }: ConfigEnv) => {
           cookieDomainRewrite: {
             [env.VITE_COOKIE_DOMAIN_REWRITE]: env.VITE_COOKIE_DOMAIN
           },
-          
+
           configure: (proxy: any) => {
-            proxy.on('proxyRes', function(proxyRes: any) {
+            proxy.on('proxyRes', function (proxyRes: any) {
               const removeSecure = (str: string) => str.replace(/; Secure|; SameSite=[^;]/gi, '')
               const set = proxyRes.headers['set-cookie']
 

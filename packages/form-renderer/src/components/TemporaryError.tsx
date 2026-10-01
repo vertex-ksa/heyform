@@ -18,7 +18,7 @@ export const TemporaryError: FC<TemporaryErrorProps> = ({
   ...restProps
 }) => {
   const { t } = useTranslation()
-  const timer = useRef<number>()
+  const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     timer.current = window.setTimeout(() => {
