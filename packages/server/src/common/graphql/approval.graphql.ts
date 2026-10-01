@@ -1,4 +1,4 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsInt, IsString, Length, Min } from 'class-validator'
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator'
 import { Field, InputType } from '@nestjs/graphql'
 import { FormDetailInput } from './form.graphql'
 
@@ -27,6 +27,7 @@ export class RequestSubmissionApprovalInput extends SubmissionApprovalInput {
   @ArrayMinSize(1)
   @ArrayMaxSize(2)
   @IsString({ each: true })
+  @Length(1, 128, { each: true })
   reviewers: string[]
 }
 
@@ -42,6 +43,9 @@ export class DecideSubmissionApprovalInput extends SubmissionApprovalInput {
   decision: 'APPROVE' | 'REJECT'
 
   @Field({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
   reason?: string
 }
 
