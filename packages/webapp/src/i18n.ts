@@ -6,6 +6,7 @@ import { initReactI18next } from 'react-i18next'
 import { LOCALE_COOKIE_NAME } from '@/consts'
 import de from '@/locales/de.json'
 import en from '@/locales/en.json'
+import { approvalEn, approvalAr } from '@/locales/approval'
 import fr from '@/locales/fr.json'
 import it from '@/locales/it.json'
 import ja from '@/locales/ja.json'
@@ -16,6 +17,7 @@ import zhTW from '@/locales/zh-tw.json'
 
 const resources = {
   ...locales,
+  ar: { translation: { approval: approvalAr } },
   de: {
     translation: {
       ...de,
@@ -25,7 +27,8 @@ const resources = {
   en: {
     translation: {
       ...en,
-      ...locales.en.translation
+      ...locales.en.translation,
+      approval: approvalEn
     }
   },
   fr: {

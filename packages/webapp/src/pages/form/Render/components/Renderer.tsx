@@ -24,7 +24,7 @@ import { GOOGLE_RECAPTCHA_KEY } from '@/consts/env'
 import { PasswordCheck } from './PasswordCheck'
 
 interface RendererProps {
-  form: FormModel
+  form: FormModel & { version?: number }
   query: Record<string, Any>
   locale: string
   contactId?: string
@@ -125,7 +125,7 @@ export const Renderer: FC<RendererProps> = ({ form, query, locale, contactId }) 
 
   async function openForm() {
     sendMessageToParent('FORM_OPENED')
-    openTokenRef.current = await EndpointService.openForm(form.id)
+    openTokenRef.current = await EndpointService.openForm(form.id, form.version)
   }
 
   function handlePasswordFinish(passwordToken: string) {

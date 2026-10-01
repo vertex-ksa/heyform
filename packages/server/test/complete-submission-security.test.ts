@@ -13,6 +13,7 @@ async function testPaymentUsesPublishedFormConfiguration() {
     id: 'form_1',
     teamId: 'team_1',
     name: 'Payment form',
+    version: 7,
     suspended: false,
     fields: [
       {
@@ -49,12 +50,14 @@ async function testPaymentUsesPublishedFormConfiguration() {
     }
   }
   const endpointService = {
-    decryptToken: () => ({ formId: 'form_1', timestamp: now }),
+    decryptToken: () => ({ formId: 'form_1', formVersion: 7, timestamp: now }),
     assertOpenToken: () => now,
     verifySpam: async () => false
   }
   const submissionService = {
     createWithinQuota: async (submission: Record<string, any>) => {
+      assert.strictEqual(submission.formVersion, 7)
+      assert.deepStrictEqual(submission.formSnapshot.fields, form.fields)
       storedSubmission = submission
       return 'submission_1'
     },

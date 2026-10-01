@@ -94,6 +94,9 @@ export class CompleteSubmissionResolver {
 
     // Start submit time
     const openToken = this.endpointService.decryptToken(input.openToken)
+    if (openToken.formVersion !== undefined && openToken.formVersion !== form.version) {
+      throw new BadRequestException('The form changed. Reload the form before submitting.')
+    }
 
     const startAt = this.endpointService.assertOpenToken(
       openToken,
@@ -191,6 +194,10 @@ export class CompleteSubmissionResolver {
         category,
         title: form.name,
         answers,
+        // Tokens issued before snapshot binding retain baseline submission behavior, but
+        // cannot become an approved version without proof of the form the respondent saw.
+        formVersion: openToken.formVersion === undefined ? undefined : form.version,
+        formSnapshot: openToken.formVersion === undefined ? undefined : { fields: form.fields, hiddenFields: form.hiddenFields, logics: form.logics, variables: form.variables },
         hiddenFields: normalizeSubmissionHiddenFields(form.hiddenFields, input.hiddenFields),
         variables,
         startAt,

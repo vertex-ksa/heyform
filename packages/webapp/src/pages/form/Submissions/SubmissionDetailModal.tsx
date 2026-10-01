@@ -6,10 +6,11 @@ import { useTranslation } from 'react-i18next'
 import { formatDay, unixDate } from '@/utils'
 
 import { Button, Modal, TableRef, TableState } from '@/components'
-import { useModal } from '@/store'
+import { useModal, useFormStore } from '@/store'
 import { SubmissionType } from '@/types'
 
 import SubmissionCell, { SubmissionHeaderCell } from './SubmissionCell'
+import ApprovalPanel from './ApprovalPanel'
 
 interface SubmissionItemProps {
   submission: SubmissionType
@@ -45,6 +46,7 @@ const SubmissionItem: FC<SubmissionItemProps> = ({ submission, field }) => {
 const SubmissionDetail: FC<SubmissionDetailProps> = () => {
   const { t, i18n } = useTranslation()
   const { payload } = useModal<SubmissionDetailPayload>('SubmissionDetailModal')
+  const { form } = useFormStore()
 
   const fields = useMemo(
     () => (payload?.fields || []).filter(f => f.kind !== FieldKindEnum.SUBMIT_DATE),
@@ -113,6 +115,8 @@ const SubmissionDetail: FC<SubmissionDetailProps> = () => {
             <SubmissionItem key={field.id} submission={payload?.submission} field={field} />
           ))}
         </div>
+        {import.meta.env.DEV && import.meta.env.VITE_FORM_APPROVAL_LOCAL_ENABLED === 'true' && payload?.submission && form &&
+          <ApprovalPanel key={payload.submission.id} formId={form.id} projectId={form.projectId} submissionId={payload.submission.id} />}
       </div>
     </div>
   )

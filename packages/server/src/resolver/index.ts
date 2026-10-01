@@ -68,6 +68,7 @@ export { CompleteSubmissionResolver } from './endpoint/complete-submission.resol
 export { FormPasswordResolver } from './endpoint/form-password.resolver'
 
 export { SubmissionsResolver } from './submission/submissions.resolver'
+export { SubmissionApprovalResolver } from './submission/approval.resolver'
 export { DeleteSubmissionResolver } from './submission/delete-submission.resolver'
 export { UpdateSubmissionAnswerResolver } from './submission/update-submission-answer.resolver'
 export { SubmissionAnswersResolver } from './submission/submission-answers.resolver'

@@ -33,6 +33,9 @@ export class OpenFormResolver {
     }
 
     assertFormIsAcceptingSubmissions(form.settings, timestamp())
+    if (input.version !== undefined && input.version !== form.version) {
+      throw new BadRequestException('The form changed. Reload the form before submitting.')
+    }
 
     // Update form visit number
     await this.formAnalyticService.updateTotalVisits(form.id)
@@ -40,6 +43,7 @@ export class OpenFormResolver {
     return aesEncryptObject(
       {
         formId: form.id,
+        formVersion: form.version,
         timestamp: timestamp()
       },
       FORM_ENCRYPTION_KEY

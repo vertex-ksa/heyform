@@ -1,5 +1,5 @@
 import { HiddenFieldAnswer } from '@heyform-inc/shared-types-enums'
-import { IsOptional, IsString, Length } from 'class-validator'
+import { IsInt, IsOptional, IsString, Length, Min } from 'class-validator'
 
 import { CdnTokenInput } from './user.graphql'
 import { Field, InputType, ObjectType } from '@nestjs/graphql'
@@ -24,6 +24,12 @@ export class UploadFormSignatureInput {
 export class OpenFormInput {
   @Field()
   formId: string
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  version?: number
 }
 
 @InputType()
