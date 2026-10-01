@@ -1,4 +1,6 @@
 export const compatibilityEn = {
+  arabicPreview: 'العربية',
+  arabicPreviewHelp: 'Approval preview; other screens use English',
   oauthTitle: 'App authorization unavailable',
   oauthUnavailable:
     'App authorization is currently unavailable. Return to your workspace to continue.',
@@ -9,6 +11,8 @@ export const compatibilityEn = {
 }
 
 export const compatibilityAr: typeof compatibilityEn = {
+  arabicPreview: 'العربية',
+  arabicPreviewHelp: 'معاينة الموافقات؛ الشاشات الأخرى باللغة الإنجليزية',
   oauthTitle: 'تفويض التطبيقات غير متاح',
   oauthUnavailable: 'تفويض التطبيقات غير متاح حاليًا. عُد إلى مساحة العمل للمتابعة.',
   returnToWorkspace: 'العودة إلى مساحة العمل',

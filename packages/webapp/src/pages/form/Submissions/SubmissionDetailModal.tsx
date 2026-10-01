@@ -6,11 +6,11 @@ import { useTranslation } from 'react-i18next'
 import { formatDay, unixDate } from '@/utils'
 
 import { Button, Modal, TableRef, TableState } from '@/components'
-import { useModal, useFormStore } from '@/store'
+import { useFormStore, useModal } from '@/store'
 import { SubmissionType } from '@/types'
 
-import SubmissionCell, { SubmissionHeaderCell } from './SubmissionCell'
 import ApprovalPanel from './ApprovalPanel'
+import SubmissionCell, { SubmissionHeaderCell } from './SubmissionCell'
 
 interface SubmissionItemProps {
   submission: SubmissionType
@@ -71,7 +71,10 @@ const SubmissionDetail: FC<SubmissionDetailProps> = () => {
     <div className="flex h-full flex-col">
       <div className="flex items-end px-6 pb-2 pt-6">
         <div className="flex-1">
-          <h1 className="text-primary text-2xl/8 font-semibold sm:text-xl/8">
+          <h1
+            id="submission-detail-heading"
+            className="text-primary text-2xl/8 font-semibold sm:text-xl/8"
+          >
             {t('form.submissions.detail.headline')}
           </h1>
 
@@ -115,8 +118,17 @@ const SubmissionDetail: FC<SubmissionDetailProps> = () => {
             <SubmissionItem key={field.id} submission={payload?.submission} field={field} />
           ))}
         </div>
-        {import.meta.env.DEV && import.meta.env.VITE_FORM_APPROVAL_LOCAL_ENABLED === 'true' && payload?.submission && form &&
-          <ApprovalPanel key={payload.submission.id} formId={form.id} projectId={form.projectId} submissionId={payload.submission.id} />}
+        {import.meta.env.DEV &&
+          import.meta.env.VITE_FORM_APPROVAL_LOCAL_ENABLED === 'true' &&
+          payload?.submission &&
+          form && (
+            <ApprovalPanel
+              key={payload.submission.id}
+              formId={form.id}
+              projectId={form.projectId}
+              submissionId={payload.submission.id}
+            />
+          )}
       </div>
     </div>
   )
@@ -135,6 +147,7 @@ export default function SubmissionDetailModal({ onClose }: SubmissionDetailProps
     <Modal
       open={isOpen}
       contentProps={{
+        'aria-labelledby': 'submission-detail-heading',
         className: 'max-w-2xl !p-0'
       }}
       onOpenChange={handleOpenChange}

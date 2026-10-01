@@ -18,7 +18,7 @@ export default function OAuth() {
       </h1>
       <p className="text-secondary break-words">{t('compatibility.oauthUnavailable')}</p>
       <Link
-        className="text-brand inline-block rounded hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+        className="text-primary inline-block rounded underline underline-offset-4 hover:no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         to="/"
       >
         {t('compatibility.returnToWorkspace')}

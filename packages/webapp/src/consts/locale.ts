@@ -1,4 +1,13 @@
 export const LOCALE_OPTIONS = [
+  ...(import.meta.env.DEV && import.meta.env.VITE_FORM_APPROVAL_LOCAL_ENABLED === 'true'
+    ? [
+        {
+          value: 'ar',
+          label: 'compatibility.arabicPreview',
+          translated: 'compatibility.arabicPreviewHelp'
+        }
+      ]
+    : []),
   {
     value: 'de',
     label: 'languages.de.original',

@@ -174,8 +174,8 @@ export default function TemplatesModel({ onBack }: TemplatesModelProps) {
   }
 
   return (
-    <div className="min-h-[calc(90vh-3.125rem)] w-[90vw]">
-      <div className="flex items-center gap-4">
+    <div className="min-h-[calc(90vh-3.125rem)] w-full sm:w-[90vw]">
+      <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -187,7 +187,7 @@ export default function TemplatesModel({ onBack }: TemplatesModelProps) {
           </button>
         </div>
 
-        <div className="border-accent-light flex flex-wrap items-center gap-x-2 gap-y-2 border-b">
+        <div className="border-accent-light flex w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-2 border-b sm:w-auto">
           {templateGroups.map(row => (
             <Button.Ghost key={row.id} size="sm" onClick={() => handleScrollIntoView(row.id)}>
               {row.category}
@@ -198,7 +198,7 @@ export default function TemplatesModel({ onBack }: TemplatesModelProps) {
               <IconUpload aria-hidden="true" className="h-4 w-4" />
               {t('compatibility.jsonImport')}
             </Button.Ghost>
-            <p id="json-import-unavailable" className="text-secondary max-w-sm text-sm">
+            <p id="json-import-unavailable" className="text-secondary max-w-sm break-words text-sm">
               {t('compatibility.jsonImportUnavailable')}
             </p>
           </div>

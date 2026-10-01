@@ -531,6 +531,7 @@ export const FORM_DETAIL_GQL = gql`
   query formDetail($input: FormDetailInput!) {
     formDetail(input: $input) {
       id
+      projectId
       teamId
       memberId
       name
