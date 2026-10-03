@@ -4,7 +4,7 @@ import GraphQLJSON from 'graphql-type-json'
 import { Auth, Form, FormGuard, User } from '@decorator'
 import { FormModel, UserModel } from '@model'
 import { ProjectService, SubmissionService, TeamService } from '@service'
-import { DecideSubmissionApprovalInput, RequestSubmissionApprovalInput, SubmissionApprovalStatusInput } from '../../common/graphql/approval.graphql'
+import { SubmissionApprovalCommandStatusInput, DecideSubmissionApprovalInput, RequestSubmissionApprovalInput, SubmissionApprovalStatusInput } from '../../common/graphql/approval.graphql'
 
 @Resolver()
 @Auth()
@@ -32,6 +32,15 @@ export class SubmissionApprovalResolver {
     @Args('input') input: SubmissionApprovalStatusInput) {
     this.assertEnabled()
     return this.submissions.approvalStatus(form.id, input.submissionId, user.id, form.teamId)
+  }
+
+  @Query(returns => GraphQLJSON)
+  @FormGuard()
+  async submissionApprovalCommandStatus(@Form() form: FormModel, @User() user: UserModel,
+    @Args('input') input: SubmissionApprovalCommandStatusInput) {
+    this.assertEnabled()
+    await this.assertMember(form, user.id)
+    return this.submissions.approvalCommandStatus(form, input.submissionId, user.id, input)
   }
 
   @Mutation(returns => GraphQLJSON)

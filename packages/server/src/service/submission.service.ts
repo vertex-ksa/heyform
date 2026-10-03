@@ -12,6 +12,7 @@ import { RedisService } from './redis.service'
 import { date, helper } from '@heyform-inc/utils'
 import { SubmissionModel } from '@model'
 import { getUpdateQuery } from '@utils'
+import { reconcileApprovalCommand } from '../utils/approval-recovery'
 import { approvalEvidenceHash, createSubmissionApproval, decideSubmissionApproval } from '../utils/approval'
 
 const { isValid } = helper
@@ -487,6 +488,13 @@ export class SubmissionService {
       evidence: submission.formSnapshot ? this.approvalSnapshot(submission) : null }
   }
 
+  async approvalCommandStatus(form: any, submissionId: string, actorId: string, input: any) {
+    const submission = await this.findByFormId(form.id, submissionId)
+    if (!submission || submission.status !== SubmissionStatusEnum.PUBLIC) throw new ForbiddenException('FORBIDDEN')
+    return reconcileApprovalCommand([...(submission.approvalHistory || []), ...(submission.approval?.requestId ? [submission.approval] : [])],
+      form.teamId, form.id, submissionId, actorId, input, submission.revision || 0)
+  }
+
   async decideApproval(formId: string, submissionId: string, actorId: string, input: {
     commandId: string; requestId: string; expectedRevision: number; decision: 'APPROVE' | 'REJECT'; reason?: string; tenantId: string
   }) {
@@ -498,7 +506,7 @@ export class SubmissionService {
     if (original.requestId !== input.requestId) throw new ConflictException('VERSION_CONFLICT')
     let approval
     try {
-      approval = decideSubmissionApproval(original, { actorId, commandId: input.commandId,
+      approval = decideSubmissionApproval(original, { actorId, commandId: input.commandId, commandRevision: input.expectedRevision,
         decision: input.decision, reason: input.reason,
         currentEvidenceHash: approvalEvidenceHash(this.approvalSnapshot(submission)), currentMember: true })
     } catch (error) {

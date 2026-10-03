@@ -19,7 +19,7 @@ export interface SubmissionApproval {
   commandId: string
   commandHash: string
   expiresAt: string
-  audit: Array<{ eventId: string; commandId: string; actorId: string; decision: string; reason: string; at: string }>
+  audit: Array<{ eventId: string; commandId: string; commandRevision?: number; actorId: string; decision: string; reason: string; at: string }>
 }
 
 // Typed scalars keep numeric answers distinct from strings and permit exact decimal text in
@@ -66,7 +66,7 @@ export function createSubmissionApproval(input: {
 }
 
 export function decideSubmissionApproval(approval: SubmissionApproval, input: {
-  actorId: string; commandId: string; decision: 'APPROVE' | 'REJECT'; reason?: string;
+  actorId: string; commandId: string; commandRevision?: number; decision: 'APPROVE' | 'REJECT'; reason?: string;
   currentEvidenceHash: string; currentMember: boolean
 }): SubmissionApproval {
   if (!input.currentMember || !approval.reviewers.includes(input.actorId) || input.actorId === approval.requesterId)
@@ -79,7 +79,7 @@ export function decideSubmissionApproval(approval: SubmissionApproval, input: {
   if (reason.length > 500 || (input.decision === 'REJECT' && !reason)) throw new Error('INVALID_REASON')
   const replay = approval.audit.find(event => event.commandId === input.commandId)
   if (replay) {
-    if (replay.actorId !== input.actorId || replay.decision !== input.decision || replay.reason !== reason)
+    if (replay.actorId !== input.actorId || replay.decision !== input.decision || replay.reason !== reason || replay.commandRevision !== input.commandRevision)
       throw new Error('COMMAND_CONFLICT')
     return approval
   }
@@ -88,6 +88,6 @@ export function decideSubmissionApproval(approval: SubmissionApproval, input: {
   const step = input.decision === 'APPROVE' ? approval.step + 1 : approval.step
   return { ...approval, step,
     state: input.decision === 'REJECT' ? 'REJECTED' : step === approval.reviewers.length ? 'APPROVED' : 'PENDING',
-    audit: [...approval.audit, { eventId: randomUUID(), commandId: input.commandId, actorId: input.actorId,
+    audit: [...approval.audit, { eventId: randomUUID(), commandId: input.commandId, commandRevision: input.commandRevision, actorId: input.actorId,
       decision: input.decision, reason, at: new Date().toISOString() }] }
 }

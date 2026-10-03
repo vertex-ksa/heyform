@@ -56,3 +56,12 @@ export class SubmissionApprovalStatusInput extends FormDetailInput {
   @Length(1, 128)
   submissionId: string
 }
+
+@InputType()
+export class SubmissionApprovalCommandStatusInput extends SubmissionApprovalInput {
+  @Field() @IsIn(['REQUEST', 'DECIDE']) action: string
+  @Field(type => [String], { nullable: true }) @IsOptional() @IsArray() @ArrayMaxSize(2) @IsString({ each: true }) reviewers?: string[]
+  @Field({ nullable: true }) @IsOptional() @IsString() @Length(1, 128) requestId?: string
+  @Field({ nullable: true }) @IsOptional() @IsIn(['APPROVE', 'REJECT']) decision?: string
+  @Field({ nullable: true }) @IsOptional() @IsString() @MaxLength(500) reason?: string
+}
