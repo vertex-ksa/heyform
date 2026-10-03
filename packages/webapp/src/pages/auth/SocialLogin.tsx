@@ -86,9 +86,8 @@ const SocialLogin: FC<SocialLoginProps> = ({ isSignUp }) => {
     <>
       <div className={providers.length === 1 ? 'grid grid-cols-1 gap-4' : 'grid grid-cols-2 gap-4'}>
         {providers.map((provider, index) => (
-          <Button
+          <Button.Ghost
             key={provider.id}
-            variant="outline"
             className={
               providers.length > 1 && providers.length % 2 === 1 && index === providers.length - 1
                 ? 'col-span-2 w-full'
@@ -98,7 +97,7 @@ const SocialLogin: FC<SocialLoginProps> = ({ isSignUp }) => {
           >
             {provider.icon}
             <span>{provider.label}</span>
-          </Button>
+          </Button.Ghost>
         ))}
       </div>
 

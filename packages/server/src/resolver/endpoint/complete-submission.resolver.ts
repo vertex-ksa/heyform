@@ -31,6 +31,7 @@ import {
   resolvePaymentConfiguration,
   selectSubmissionFields
 } from '@utils'
+import { approvalEvidenceHash, publishedFormSnapshot } from '../../utils/approval'
 
 @Resolver()
 @UseGuards(EndpointAnonymousIdGuard)
@@ -94,6 +95,12 @@ export class CompleteSubmissionResolver {
 
     // Start submit time
     const openToken = this.endpointService.decryptToken(input.openToken)
+    if (openToken.formVersion !== undefined && openToken.formVersion !== form.version) {
+      throw new BadRequestException('The form changed. Reload the form before submitting.')
+    }
+    if (openToken.formSchemaHash !== undefined && openToken.formSchemaHash !== approvalEvidenceHash(publishedFormSnapshot(form))) {
+      throw new BadRequestException('The form changed. Reload the form before submitting.')
+    }
 
     const startAt = this.endpointService.assertOpenToken(
       openToken,
@@ -191,6 +198,10 @@ export class CompleteSubmissionResolver {
         category,
         title: form.name,
         answers,
+        // Tokens issued before snapshot binding retain baseline submission behavior, but
+        // cannot become an approved version without proof of the form the respondent saw.
+        formVersion: openToken.displayedSchemaBound === true ? openToken.formVersion : undefined,
+        formSnapshot: openToken.displayedSchemaBound === true ? publishedFormSnapshot(form) : undefined,
         hiddenFields: normalizeSubmissionHiddenFields(form.hiddenFields, input.hiddenFields),
         variables,
         startAt,

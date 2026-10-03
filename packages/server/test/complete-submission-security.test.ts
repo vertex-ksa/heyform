@@ -3,6 +3,7 @@ import * as assert from 'assert'
 
 import { PaymentIntentWebhookController } from '../src/controller/payment-intent-webhook.controller'
 import { CompleteSubmissionResolver } from '../src/resolver/endpoint/complete-submission.resolver'
+import { approvalEvidenceHash, publishedFormSnapshot } from '../src/utils/approval'
 
 async function testPaymentUsesPublishedFormConfiguration() {
   let storedSubmission: Record<string, any> | undefined
@@ -13,6 +14,7 @@ async function testPaymentUsesPublishedFormConfiguration() {
     id: 'form_1',
     teamId: 'team_1',
     name: 'Payment form',
+    version: 7,
     suspended: false,
     fields: [
       {
@@ -49,12 +51,14 @@ async function testPaymentUsesPublishedFormConfiguration() {
     }
   }
   const endpointService = {
-    decryptToken: () => ({ formId: 'form_1', timestamp: now }),
+    decryptToken: () => ({ formId: 'form_1', formVersion: 7, formSchemaHash: approvalEvidenceHash(publishedFormSnapshot(form)), displayedSchemaBound: true, timestamp: now }),
     assertOpenToken: () => now,
     verifySpam: async () => false
   }
   const submissionService = {
     createWithinQuota: async (submission: Record<string, any>) => {
+      assert.strictEqual(submission.formVersion, 7)
+      assert.deepStrictEqual(submission.formSnapshot.fields, form.fields)
       storedSubmission = submission
       return 'submission_1'
     },

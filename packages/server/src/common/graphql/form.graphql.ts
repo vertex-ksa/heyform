@@ -1199,6 +1199,9 @@ export class FormType {
 
 @ObjectType()
 export class PublicFormType extends FormType {
+  @Field({ nullable: true })
+  schemaHash?: string
+
   @Field(type => [FormFieldType], { nullable: true })
   fields: FormField[]
 

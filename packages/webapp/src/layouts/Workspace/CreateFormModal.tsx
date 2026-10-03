@@ -114,12 +114,15 @@ const CreateFormComponent = () => {
 }
 
 export default function CreateFormModal() {
+  const { t } = useTranslation()
   const { isOpen, onOpenChange } = useModal('CreateFormModal')
 
   return (
     <Modal
       open={isOpen}
       contentProps={{
+        'aria-labelledby': undefined,
+        'aria-label': t('form.creation.headline'),
         id: 'create-form-modal',
         className: 'sm:max-w-full sm:max-h-[90vh] w-auto'
       }}

@@ -4,6 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
 
 import { LOCALE_COOKIE_NAME } from '@/consts'
+import { approvalAr, approvalEn } from '@/locales/approval'
+import { compatibilityAr, compatibilityEn } from '@/locales/compatibility'
 import de from '@/locales/de.json'
 import en from '@/locales/en.json'
 import fr from '@/locales/fr.json'
@@ -16,6 +18,7 @@ import zhTW from '@/locales/zh-tw.json'
 
 const resources = {
   ...locales,
+  ar: { translation: { approval: approvalAr, compatibility: compatibilityAr } },
   de: {
     translation: {
       ...de,
@@ -25,7 +28,9 @@ const resources = {
   en: {
     translation: {
       ...en,
-      ...locales.en.translation
+      ...locales.en.translation,
+      approval: approvalEn,
+      compatibility: compatibilityEn
     }
   },
   fr: {

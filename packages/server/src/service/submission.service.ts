@@ -3,7 +3,7 @@ import {
   SubmissionCategoryEnum,
   SubmissionStatusEnum
 } from '@heyform-inc/shared-types-enums'
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, ConflictException, ForbiddenException, Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 
@@ -12,6 +12,8 @@ import { RedisService } from './redis.service'
 import { date, helper } from '@heyform-inc/utils'
 import { SubmissionModel } from '@model'
 import { getUpdateQuery } from '@utils'
+import { reconcileApprovalCommand } from '../utils/approval-recovery'
+import { approvalEvidenceHash, createSubmissionApproval, decideSubmissionApproval } from '../utils/approval'
 
 const { isValid } = helper
 
@@ -401,7 +403,9 @@ export class SubmissionService {
       {
         $push: {
           answers: answer
-        }
+        },
+        $inc: { revision: 1, contentRevision: 1 },
+        $set: { 'approval.state': 'INVALIDATED' }
       }
     )
     return result.acknowledged
@@ -420,10 +424,102 @@ export class SubmissionService {
         'answers.id': answer.id
       },
       {
-        $set: getUpdateQuery(updates, 'answers.$', false)
+        $set: { ...getUpdateQuery(updates, 'answers.$', false), 'approval.state': 'INVALIDATED' },
+        $inc: { revision: 1, contentRevision: 1 }
       }
     )
     return result.acknowledged
+  }
+
+  private approvalSnapshot(submission: SubmissionModel) {
+    if (submission.formVersion === undefined || !submission.formSnapshot) {
+      throw new BadRequestException('Legacy submission has no immutable form snapshot')
+    }
+    return { contentRevision: submission.contentRevision || 0, formVersion: submission.formVersion, formSnapshot: submission.formSnapshot,
+      answers: submission.answers, hiddenFields: submission.hiddenFields, variables: submission.variables }
+  }
+
+  private revisionFilter(revision: number) {
+    return revision === 0 ? { $or: [{ revision: 0 }, { revision: { $exists: false } }] } : { revision }
+  }
+
+  async requestApproval(form: any, submissionId: string, actorId: string, reviewers: string[], commandId: string, expectedRevision: number) {
+    const submission = await this.findByFormId(form.id, submissionId)
+    if (!submission || submission.status !== SubmissionStatusEnum.PUBLIC) throw new ForbiddenException('FORBIDDEN')
+    const commandHash = approvalEvidenceHash({ reviewers, revision: expectedRevision })
+    if (submission.approvalHistory?.some(previous => previous.commandId === commandId)) {
+      throw new ConflictException('COMMAND_CONFLICT')
+    }
+    if (submission.approval?.commandId === commandId) {
+      if (submission.approval.commandHash !== commandHash || submission.approval.requesterId !== actorId) {
+        throw new ConflictException('COMMAND_CONFLICT')
+      }
+      return submission.approval
+    }
+    if ((submission.revision || 0) !== expectedRevision || (submission.approval?.state === 'PENDING' && Date.parse(submission.approval.expiresAt) > Date.now())) {
+      throw new ConflictException('VERSION_CONFLICT')
+    }
+    if ((submission.approvalHistory?.length || 0) >= 20) throw new BadRequestException('Approval history limit reached')
+    let approval
+    try {
+      approval = createSubmissionApproval({ tenantId: form.teamId, formId: form.id, submissionId,
+        submissionRevision: submission.contentRevision || 0, commandRevision: expectedRevision, formVersion: submission.formVersion,
+        snapshot: this.approvalSnapshot(submission), requesterId: actorId, reviewers, commandId })
+    } catch (error) {
+      throw new BadRequestException(error.message)
+    }
+    const updates: any = { $set: { approval }, $inc: { revision: 1 } }
+    if (submission.approval?.requestId) updates.$push = { approvalHistory: submission.approval }
+    const result = await this.submissionModel.findOneAndUpdate({ _id: submissionId, formId: form.id,
+      ...this.revisionFilter(expectedRevision) }, updates, { new: true })
+    if (!result) throw new ConflictException('VERSION_CONFLICT')
+    return result.approval
+  }
+
+  async approvalStatus(formId: string, submissionId: string, actorId: string, tenantId?: string) {
+    const submission = await this.findByFormId(formId, submissionId)
+    if (!submission || submission.status !== SubmissionStatusEnum.PUBLIC) throw new ForbiddenException('FORBIDDEN')
+    const approval = submission.approval?.requestId ? submission.approval : null
+    if (approval && tenantId && approval.tenantId !== tenantId) throw new ForbiddenException('FORBIDDEN')
+    if (approval && approval.requesterId !== actorId && !approval.reviewers.includes(actorId)) {
+      throw new ForbiddenException('FORBIDDEN')
+    }
+    return { revision: submission.revision || 0, formVersion: submission.formVersion, approval,
+      evidence: submission.formSnapshot ? this.approvalSnapshot(submission) : null }
+  }
+
+  async approvalCommandStatus(form: any, submissionId: string, actorId: string, input: any) {
+    const submission = await this.findByFormId(form.id, submissionId)
+    if (!submission || submission.status !== SubmissionStatusEnum.PUBLIC) throw new ForbiddenException('FORBIDDEN')
+    return reconcileApprovalCommand([...(submission.approvalHistory || []), ...(submission.approval?.requestId ? [submission.approval] : [])],
+      form.teamId, form.id, submissionId, actorId, input, submission.revision || 0)
+  }
+
+  async decideApproval(formId: string, submissionId: string, actorId: string, input: {
+    commandId: string; requestId: string; expectedRevision: number; decision: 'APPROVE' | 'REJECT'; reason?: string; tenantId: string
+  }) {
+    const submission = await this.findByFormId(formId, submissionId)
+    const original = submission?.approval
+    if (submission?.status !== SubmissionStatusEnum.PUBLIC) throw new ForbiddenException('FORBIDDEN')
+    if (!original?.requestId || !original.reviewers.includes(actorId)) throw new ForbiddenException('FORBIDDEN')
+    if (original.tenantId !== input.tenantId) throw new ForbiddenException('FORBIDDEN')
+    if (original.requestId !== input.requestId) throw new ConflictException('VERSION_CONFLICT')
+    let approval
+    try {
+      approval = decideSubmissionApproval(original, { actorId, commandId: input.commandId, commandRevision: input.expectedRevision,
+        decision: input.decision, reason: input.reason,
+        currentEvidenceHash: approvalEvidenceHash(this.approvalSnapshot(submission)), currentMember: true })
+    } catch (error) {
+      if (error.message === 'FORBIDDEN') throw new ForbiddenException('FORBIDDEN')
+      throw new ConflictException(error.message)
+    }
+    if (approval === original) return original
+    if ((submission.revision || 0) !== input.expectedRevision) throw new ConflictException('VERSION_CONFLICT')
+    const result = await this.submissionModel.findOneAndUpdate({ _id: submissionId, formId,
+      ...this.revisionFilter(input.expectedRevision), 'approval.requestId': input.requestId,
+      'approval.state': 'PENDING' }, { $set: { approval }, $inc: { revision: 1 } }, { new: true })
+    if (!result) throw new ConflictException('VERSION_CONFLICT')
+    return result.approval
   }
 
   async analytic(formId: string, startAt: number, endAt: number) {

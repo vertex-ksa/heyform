@@ -9,6 +9,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document } from 'mongoose'
 
 import { UserAgent } from '@utils'
+import { SubmissionApproval } from '../utils/approval'
 
 export enum ExportSubmissionFormatEnum {
   CSV = 'csv',
@@ -34,6 +35,24 @@ export class SubmissionModel extends Document {
 
   @Prop({ type: [Object], default: [] })
   answers: Answer[]
+
+  @Prop({ default: 0 })
+  revision: number
+
+  @Prop({ default: 0 })
+  contentRevision: number
+
+  @Prop()
+  formVersion?: number
+
+  @Prop({ type: Object })
+  formSnapshot?: Record<string, any>
+
+  @Prop({ type: Object })
+  approval?: SubmissionApproval
+
+  @Prop({ type: [Object], default: [] })
+  approvalHistory?: SubmissionApproval[]
 
   @Prop({ type: [Object], default: [] })
   hiddenFields?: HiddenFieldAnswer[]

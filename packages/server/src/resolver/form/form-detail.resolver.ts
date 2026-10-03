@@ -97,7 +97,8 @@ export class PublicFormResolver {
       isDraft: form.isDraft || false,
       status: form.status,
       stripeAccount: form.stripeAccount,
-      version: form.version || 1,
+      version: form.version ?? 0,
+      schemaHash: form.schemaHash,
       canPublish: form.canPublish || false,
       customReport: form.customReport || {
         id: '',

@@ -1,7 +1,7 @@
 import type { Options as PopperOptions } from '@popperjs/core/lib/types'
 import { IconCheck, IconChevronDown, IconChevronUp } from '@tabler/icons-react'
 import clsx from 'clsx'
-import type { CSSProperties, FC, MouseEvent } from 'react'
+import type { CSSProperties, FC, MouseEvent, ReactElement } from 'react'
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { stopEvent, useKey, useTranslation } from '../utils'
@@ -44,9 +44,9 @@ interface SelectProps extends Omit<IComponentProps, 'value' | 'onChange'> {
   loading?: boolean
   disabled?: boolean
   unmountOnExit?: boolean
-  valueRender?: (option?: AnyMap) => JSX.Element
+  valueRender?: (option?: AnyMap) => ReactElement
   placeholder?: string
-  optionRender?: (option: AnyMap, isActive?: boolean) => JSX.Element
+  optionRender?: (option: AnyMap, isActive?: boolean) => ReactElement
   onDropdownVisibleChange?: (isVisible: boolean) => void
   onChange?: (value: any) => void
 }

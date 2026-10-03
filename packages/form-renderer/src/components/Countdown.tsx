@@ -20,7 +20,7 @@ function parseTime(t: number) {
 
 export const Countdown: FC<CountdownProps> = ({ settings, onEnd }) => {
   const [timeLimit, setTimeLimit] = useState(settings.timeLimit!)
-  const timer = useRef<any>()
+  const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
 
   function stopTimer() {
     if (timer.current) {

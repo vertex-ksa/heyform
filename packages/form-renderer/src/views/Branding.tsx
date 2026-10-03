@@ -8,7 +8,7 @@ import { useStore } from '../store'
 
 export const Branding: FC = () => {
   const { state } = useStore()
-  const { t } = useTranslation()
+  const { i18n } = useTranslation()
 
   if (state.settings?.removeBranding) {
     return null
@@ -17,7 +17,8 @@ export const Branding: FC = () => {
   return (
     <a className="heyform-branding" href="https://heyform.net/?ref=badge" target="_blank">
       <Trans
-        t={t}
+        i18n={i18n}
+        tOptions={{ lng: state.locale }}
         i18nKey="Made with HeyForm"
         components={{
           icon: <LogoIcon className="inline h-4 w-4" />,
